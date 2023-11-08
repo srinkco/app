@@ -3,6 +3,7 @@ import 'package:srink/api.dart';
 import 'package:srink/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -115,6 +116,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController longUrlController = TextEditingController();
+    final TextEditingController hashController = TextEditingController();
+    final GlobalKey<FormState> longUrlInputFormKey = GlobalKey<FormState>();
+    final GlobalKey<FormState> hashInputFormKey = GlobalKey<FormState>();
     return Scaffold(
       appBar: AppBar(
         title: Text("Srink Link Shortener"),
@@ -149,12 +154,89 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Text(
-              "Hello",
+              "Srink",
               style: TextStyle(
                 color: bigTxtColor,
+                fontSize: 100,
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
               ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(30, 30, 30, 0),
+              child: Form(
+                key: longUrlInputFormKey,
+                child: TextFormField(
+                  style: const TextStyle(color: txtColor),
+                  cursorColor: const Color.fromARGB(255, 158, 158, 158),
+                  controller: longUrlController,
+                  decoration: const InputDecoration(
+                    labelStyle: TextStyle(color: txtColor),
+                    labelText: "Enter Long URL",
+                    fillColor: Colors.grey,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Please enter some text";
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(30, 0, 30, 15),
+              child: Form(
+                key: hashInputFormKey,
+                child: TextFormField(
+                  style: const TextStyle(color: txtColor),
+                  cursorColor: const Color.fromARGB(255, 158, 158, 158),
+                  controller: hashController,
+                  decoration: const InputDecoration(
+                    labelStyle: TextStyle(color: txtColor),
+                    labelText: "Enter Hash (Optional)",
+                    fillColor: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (!longUrlInputFormKey.currentState!.validate()) {
+                  return;
+                }
+                shortenUrl(
+                  longUrlController.text,
+                  hashController.text,
+                  apiKey,
+                ).then((resp) {
+                  longUrlController.clear();
+                  hashController.clear();
+                  if (!resp.ok) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Failed to shorten url: ${resp.error}"),
+                      ),
+                    );
+                    return;
+                  }
+                  Clipboard.setData(ClipboardData(text: resp.url)).then(
+                    (value) => ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "Your shortened url is: ${resp.url}\nCopied to clipboard!",
+                        ),
+                      ),
+                    ),
+                  );
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
+              ),
+              child: Text("Shorten URL"),
             )
           ],
         ),
