@@ -1,4 +1,4 @@
-package com.example.srink
+package co.srink.app
 
 import io.flutter.embedding.android.FlutterActivity
 

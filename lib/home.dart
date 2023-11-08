@@ -16,13 +16,7 @@ class _HomePageState extends State<HomePage> {
   late List<Widget> drawer;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    drawer = _getDrawerElements();
     return Scaffold(
       appBar: AppBar(
         title: Text("Srink Link Shortener"),
@@ -50,13 +44,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ] +
-              drawer,
+              _getDrawerElements(),
         ),
       ),
       backgroundColor: fgColor,
     );
   }
 
+  bool hideInvalidAuth = true;
   List<Widget> _getDrawerElements() {
     if (apiKey.isNotEmpty) {
       return [
@@ -69,77 +64,88 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-      ];
-    }
-    return [
-      Padding(
-        padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
-        child: Form(
-          key: _formKey,
-          child: TextFormField(
-            style: const TextStyle(color: txtColor),
-            cursorColor: const Color.fromARGB(255, 158, 158, 158),
-            decoration: const InputDecoration(
-              hintStyle: TextStyle(color: txtColor),
-              hintText: "Enter API Key",
-              hoverColor: Colors.blueGrey,
-              focusColor: Colors.grey,
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Please enter some text";
-              }
-              String? error;
-              void checkToken(String token) async {
-                SrinkResponse resp =
-                    await shortenUrl("https://test.com", "test", token);
-                if (resp.ok) {
-                  error = "nothing";
-                  return;
-                }
-                error = resp.error;
-              }
-
-              checkToken(value);
-              if (error != null) {
-                return error;
-              }
-
-              SharedPreferences.getInstance()
-                  .then(
-                    (spi) => spi.setString(
-                      srinkApikey,
-                      value,
-                    ),
-                  )
-                  .whenComplete(() => null);
-              return null;
+        Padding(
+          padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+          child: ElevatedButton(
+            onPressed: () async {
+              await (await SharedPreferences.getInstance()).remove(srinkApikey);
+              apiKey = "";
+              setState(() {});
             },
+            child: Text("Logout"),
           ),
         ),
-      ),
-      Padding(
-        padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
-        child: ElevatedButton(
-          onPressed: () async {
-            if (!_formKey.currentState!.validate()) {
-              return;
-            }
-            drawer.clear();
-            drawer.add(Padding(
-              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
-              child: Text(
-                "Logged In Successfully",
-                style: TextStyle(
-                  color: Colors.grey,
+      ];
+    }
+    final TextEditingController tokenController = TextEditingController();
+    List<Padding> invalidAuthWidget() {
+      if (hideInvalidAuth) {
+        return [];
+      }
+      return [
+        Padding(
+          padding: EdgeInsets.fromLTRB(15, 10, 15, 0),
+          child: Text(
+            "The auth token you entered was invalid, please try again.",
+            style: TextStyle(
+              color: Color.fromARGB(255, 220, 60, 60),
+              fontSize: 13,
+            ),
+          ),
+        )
+      ];
+    }
+
+    return [
+          Padding(
+            padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+            child: Form(
+              key: _formKey,
+              child: TextFormField(
+                style: const TextStyle(color: txtColor),
+                cursorColor: const Color.fromARGB(255, 158, 158, 158),
+                controller: tokenController,
+                decoration: const InputDecoration(
+                  labelStyle: TextStyle(color: txtColor),
+                  labelText: "API Key",
+                  fillColor: Colors.grey,
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter some text";
+                  }
+                  return null;
+                },
               ),
-            ));
-            setState(() {});
-          },
-          child: Text("Login"),
-        ),
-      ),
-    ];
+            ),
+          )
+        ] +
+        invalidAuthWidget() +
+        [
+          Padding(
+            padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+            child: ElevatedButton(
+              onPressed: () async {
+                if (!_formKey.currentState!.validate()) {
+                  hideInvalidAuth = true;
+                  setState(() {});
+                  return;
+                }
+                SrinkResponse resp = await shortenUrl(
+                    "https://test.com", "test", tokenController.text);
+                if (!resp.ok) {
+                  hideInvalidAuth = false;
+                } else {
+                  hideInvalidAuth = true;
+                  await (await SharedPreferences.getInstance())
+                      .setString(srinkApikey, tokenController.text);
+                  apiKey = tokenController.text;
+                }
+                setState(() {});
+              },
+              child: Text("Login"),
+            ),
+          ),
+        ];
   }
 }

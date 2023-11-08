@@ -26,7 +26,7 @@ Future<SrinkResponse> shortenUrl(String url, String hash, String token) async {
   final resp = await http.get(
     Uri.parse('https://srink.co/api/new?token=$token&hash=$hash&url=$url'),
   );
-  if (resp.statusCode == 200) {
+  if (resp.body.isNotEmpty) {
     return SrinkResponse.parseJson(
         jsonDecode(resp.body) as Map<String, dynamic>);
   } else {
