@@ -14,44 +14,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late List<Widget> drawer;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Srink Link Shortener"),
-        backgroundColor: bgColor,
-        centerTitle: true,
-      ),
-      drawer: Drawer(
-        backgroundColor: drawerBgColor,
-        child: ListView(
-          children: const <Widget>[
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: drawerBoxColor,
-                  ),
-                  child: Center(
-                    child: Text(
-                      "Srink.co",
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 255, 195, 31),
-                        fontSize: 70,
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ),
-              ] +
-              _getDrawerElements(),
-        ),
-      ),
-      backgroundColor: fgColor,
-    );
-  }
-
   bool hideInvalidAuth = true;
+
   List<Widget> _getDrawerElements() {
     if (apiKey.isNotEmpty) {
       return [
@@ -147,5 +111,54 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Srink Link Shortener"),
+        backgroundColor: bgColor,
+        centerTitle: true,
+      ),
+      drawer: Drawer(
+        backgroundColor: drawerBgColor,
+        child: ListView(
+          children: const <Widget>[
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: drawerBoxColor,
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Srink.co",
+                      style: TextStyle(
+                        color: bigTxtColor,
+                        fontSize: 70,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ] +
+              _getDrawerElements(),
+        ),
+      ),
+      backgroundColor: fgColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              "Hello",
+              style: TextStyle(
+                color: bigTxtColor,
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }
