@@ -15,10 +15,21 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   Future<String> _fetchToken() async {
-    // TODO: check if token is valid or not
-    await shortenUrl("https://test.com", "", "");
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(srinkApikey) ?? "";
+    final pref = await SharedPreferences.getInstance();
+
+    final token = pref.getString(srinkApikey);
+    if (token == null) {
+      return "";
+    }
+
+    SrinkResponse resp = await shortenUrl("https://test.com", "test", token);
+    if (!resp.ok) {
+      // logout if token invalid
+      await pref.remove(srinkApikey);
+      return "";
+    }
+
+    return token;
   }
 
   late Future<String> futureFetchToken;
